@@ -1,6 +1,8 @@
 // Cargar modulos y crear nueva aplicacion
-var express = require("express"); 
-var app = express();
+var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+
 var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // soporte para bodies codificados en jsonsupport
 app.use(bodyParser.urlencoded({ extended: true })); // soporte para bodies codificados
@@ -14,18 +16,20 @@ var fs = require('fs');
 
 
 // Obre una pipe de lectura per a llegir del fitxer. No sabem com es crida això
-app.get('/:model_obj', function(req, res){
-  var filename = req.params.model_obj;
-  var readStream = fs.createReadStream('./models/' + filename);
-  console.log ("INICIA AQUI LA INFO!!!!!!!!!!!");
-  console.log (readStream);
-  console.log ("FINALITZA AQUI LA INFO!!!!!!!!");
-  res.pipe(readStream);
-  }, function(err) {
-    throw err;
-});
+// app.get('/:model_obj', function(req, res){
+//   var filename = req.params.model_obj;
+//   var readStream = fs.createReadStream('./models/' + filename);
+//   console.log ("INICIA AQUI LA INFO!!!!!!!!!!!");
+//   console.log (readStream);
+//   console.log ("FINALITZA AQUI LA INFO!!!!!!!!");
+//   res.pipe(readStream);
+//   }, function(err) {
+//     throw err;
+// });
 
-
+app.get('/', function(req,res){
+  res.send("Hola")
+})
 // Retorna el fitxer (creiem) o contingut. A postman sembla que retorni contingut..
 app.get('/proves/:model_obj', function(req, res){
   var filename = req.params.model_obj;
@@ -51,7 +55,7 @@ app.get('/modulos/:filename', function(req, res){
 
 
 // Retorna llista amb tots els fitxers que puc escollir com a model dins la carpeta Models
-app.get('/models/list', function(req, res){
+app.get('/list', function(req, res){
   fs.readdir(modelsFolder, (err, files) => {
     var filesList = [];
     files.forEach(file => {
@@ -78,7 +82,7 @@ function readFile(filename, onFileContent, onError) {
 
 
 // Retorna el contingut del fitxer nom model_obj
-app.get('/contingut/:model_obj', function(req, res){
+app.get('/model/:model_obj', function(req, res){
   var filename = req.params.model_obj;
   readFile(filename, function(filename, content) { 
     res.send(content);
@@ -88,6 +92,21 @@ app.get('/contingut/:model_obj', function(req, res){
 });
 
 
-var server = app.listen(8090, function () {
-    console.log('Server is running..'); 
+// EndPoint para indicar que modelo queremos reproducir
+// a través de Sockets.io
+app.get('/change/:model_obj', function(req, res){
+  var filename = req.params.model_obj;
+  io.emit('change',  filename )
+});
+
+
+//Inicializamos Sockets
+io.on('connection', function(socket){
+  console.log('a user connected');
+});
+
+
+
+http.listen(3000, '0.0.0.0' ,function(){
+  console.log('listening on *:3000');
 });
