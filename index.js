@@ -119,7 +119,8 @@ function readFile(filename, onFileContent, onError) {
 
 
 
+const PORT = process.env.PORT || 8080
 
-http.listen( 3000, function(){
+http.listen( PORT, function(){
   console.log('listening on *:3000');
 });
