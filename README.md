@@ -1,7 +1,7 @@
 Traball de PAE de:
 
-Arnau Coromina
-Alejandra
-Daniel Novoa
-Iria
-Marc Lecha
+Arnau Coromina; 
+Alejandra Jimenez; 
+Daniel Novoa; 
+Iria Cervelló; 
+Marc Lecha; 
