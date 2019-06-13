@@ -3,10 +3,19 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+const sqlite3 = require('sqlite3').verbose();
+
 var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // soporte para bodies codificados en jsonsupport
 app.use(bodyParser.urlencoded({ extended: true })); // soporte para bodies codificados
 
+
+let db = new sqlite3.Database('./config.db', (err) => {
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Connected to the config database.');
+});
 
 // API REAL:
 
@@ -55,7 +64,7 @@ app.get('/model/:model_obj', function(req, res){
 
 
 // [GET] Obre una pipe de lectura per a llegir del fitxer. No sabem com es crida això
-app.get('/:model_obj', function(req, res){
+app.get('/model/:model_obj', function(req, res){
   var filename = req.params.model_obj;
   var readStream = fs.createReadStream('./models/' + filename);
   console.log ("INICIA AQUI LA INFO!!!!!!!!!!!");
@@ -75,6 +84,50 @@ app.get('/change/:model_obj', function(req, res){
   res.sendStatus(200)
 });
 
+// [GET] EndPoint para indicar que modelo queremos reproducir a través de Sockets.io
+app.get('/ghost', function(req, res){
+  console.log("[GET] /ghost")
+  io.emit('ghost')
+  res.sendStatus(200)
+});
+
+app.get('/ogre', function(req, res){
+  console.log("[GET] /ogre")
+  io.emit('ogre')
+  res.sendStatus(200)
+});
+
+
+// [GET] Retorna el tipus de configuració de la app
+app.get('/config/type', function(req, res){
+    let sql = `SELECT * FROM variables WHERE name = ?`;
+    let name = "type";
+
+    // first row only
+    db.get(sql, [name], (err, row) => {
+        if (err) {
+          console.error(err.message);
+        }
+        console.log(row.value)
+        res.status(200).send({ "value": row.value });
+
+    });
+});
+
+// [POST] Posa el tipus de configuració a la app
+app.post('/config/type', function(req,res){
+  let sql = 'UPDATE variables SET value = ? WHERE name = ?;'
+  let value = [req.body.value, "type"]
+
+  db.run(sql, value, function(err) {
+    if (err) {
+      console.error(err.message);
+      res.sendStatus(400)
+    }
+    res.sendStatus(200)
+   
+  });
+})
 
 /* L' Arnau inventant
 app.get('/modulos/:filename', function(req, res){
